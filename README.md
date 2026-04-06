@@ -54,4 +54,4 @@ A parte mais legal do repositório é que ele permite mudar as classes e gerar u
 
 ---
 
-*Coded by [Seu Nome / @Usuário]*
+*Coded by [Luiz Willian / @luw1z*
