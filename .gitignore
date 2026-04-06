@@ -1,0 +1,18 @@
+# Ambientes Virtuais e binários
+.venv/
+.venv-312/
+venv/
+__pycache__/
+*.pyc
+
+# Dataset gigantestco
+*.csv
+
+# Modelos do Mediapipe (Podem ser pesados, as vezes é bom ignorar, mas com 8MB pode subir junto caso queira. Descomente abaixo se preferir ignorar)
+# *.task
+
+# Arquivos de IDE e SO
+.vscode/
+.idea/
+.DS_Store
+.env

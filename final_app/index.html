@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Hand AI</title>
+    <!-- Fontes modernas -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette moderna e premium (Dark Theme padrão SaaS) */
+            --bg-base: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --accent-purple: #8b5cf6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg-base);
+            /* Mesh gradient background animado */
+            position: relative;
+            overflow-x: hidden;
+            color: var(--text-main);
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.15;
+            animation: float 20s infinite ease-in-out alternate;
+        }
+        body::before {
+            top: -20vw;
+            left: -10vw;
+            background: var(--accent);
+        }
+        body::after {
+            bottom: -20vw;
+            right: -10vw;
+            background: var(--accent-purple);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(20px) scale(1.1); }
+        }
+
+        header {
+            width: 100%;
+            max-width: 1060px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .workspace {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            width: 100%;
+            max-width: 1060px;
+            justify-content: center;
+        }
+
+        /* Efeito de Glassmorphism */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.6), 0 0 40px -10px var(--accent-glow);
+        }
+
+        .camera-box {
+            padding: 16px;
+            flex: 1;
+            min-width: 480px;
+        }
+
+        #output_canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            background: #000;
+            display: block;
+            object-fit: cover;
+        }
+
+        .side-panel {
+            padding: 32px;
+            width: 360px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .hud-wrapper {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hud {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-main);
+            width: 100%;
+            line-height: 1.2;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--glass-border);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-family: 'Outfit', monospace;
+            font-size: 1.2rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .controls {
+            padding-top: 24px;
+            border-top: 1px solid var(--glass-border);
+            margin-top: auto;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            font-weight: 500;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+            border: 1px solid var(--text-muted);
+            cursor: pointer;
+            display: grid;
+            place-content: center;
+            transition: all 0.2s;
+        }
+
+        input[type="checkbox"]::before {
+            content: "";
+            width: 12px;
+            height: 12px;
+            transform: scale(0);
+            transition: 0.2s transform cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 1em 1em white;
+            background-color: white;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        .quality-wrapper {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quality-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            transition: background .15s ease-in-out;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #60a5fa;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        @media(max-width: 900px) {
+            .workspace {
+                flex-direction: column;
+                align-items: center;
+            }
+            .camera-box {
+                min-width: 100%;
+            }
+            .side-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Neural Hand AI</h1>
+        <div class="subtitle">Análise avançada de detecção gestual em tempo real</div>
+    </header>
+
+    <video id="video" autoplay playsinline style="display:none;"></video>
+
+    <div class="workspace">
+        <div class="glass-card camera-box">
+            <canvas id="output_canvas" width="640" height="480"></canvas>
+        </div>
+
+        <div class="glass-card side-panel">
+            <div style="flex-grow: 1;">
+                <div class="status-title">Reconhecimento</div>
+                
+                <div class="hud-wrapper">
+                    <div class="hud" id="final-gesture">Aguardando Câmera...</div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">Latência (Ping)</span>
+                        <span class="metric-value" id="latency-counter">-- ms</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Framerate</span>
+                        <span class="metric-value" id="fps-counter">-- FPS</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" id="draw-checkbox" checked>
+                    Habilitar Renderização Espacial
+                </label>
+
+                <div class="quality-wrapper">
+                    <label for="quality-slider" class="quality-label">
+                        Qualidade da Câmera (FPS): <span id="quality-value" style="color:var(--text-main); font-family:'Outfit', monospace;">50%</span>
+                    </label>
+                    <input type="range" id="quality-slider" min="10" max="100" value="50">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/script.js"></script>
+</body>
+
+</html>
